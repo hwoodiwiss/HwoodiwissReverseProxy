@@ -1,16 +1,20 @@
-﻿using System.Net.Http.Json;
-using HwoodiwissReverseProxy.Tests.Integration.Assertions;
-using Yarp.ReverseProxy.Configuration;
+﻿using HwoodiwissReverseProxy.Tests.Integration.Assertions;
 
 namespace HwoodiwissReverseProxy.Tests.Integration;
 
-public class ProxyConfigurationTests(HwoodiwissReverseProxyFixture fixture)
-    : IClassFixture<HwoodiwissReverseProxyFixture>
+public class ProxyConfigurationTests : IClassFixture<HwoodiwissReverseProxyManagementFixture>
 {
+    private readonly HwoodiwissReverseProxyManagementFixture _managementFixture;
+
+    public ProxyConfigurationTests(HwoodiwissReverseProxyManagementFixture managementFixture)
+    {
+        _managementFixture = managementFixture;
+    }
+
     [Fact]
     public async Task GetProxy_Returns_ProxyConfig()
     {
-        var client = fixture.CreateClient();
+        var client = _managementFixture.CreateClient();
         var response = await client.GetStringAsync("/proxy");
         response.ShouldNotBeNull().ShouldContainAll(["Routes", "Clusters"]);
     }

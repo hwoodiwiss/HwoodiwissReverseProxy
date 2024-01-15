@@ -11,9 +11,17 @@ public static class WebApplicationBuilderExtensions
 {
     public const string ProxyComponentName = "ReverseProxy";
     public const string ManagementComponentName = "Management";
-    
+
+    public static WebApplicationBuilder WithName(this WebApplicationBuilder builder, string applicationName)
+    {
+        builder.Environment.ApplicationName = $"{builder.Environment.ApplicationName}.{applicationName}";
+
+        return builder;
+    }
+
     public static WebApplication ConfigureAndBuild(this WebApplicationBuilder builder)
     {
+        builder.WithName("Management");
         builder.Configuration.ConfigureConfiguration();
         var managementUrls = builder.Configuration.GetValue<string>("ManagementUrls");
         managementUrls = string.IsNullOrEmpty(managementUrls) ? "http://*:18265" : managementUrls;
@@ -28,6 +36,7 @@ public static class WebApplicationBuilderExtensions
     
     public static WebApplication ConfigureProxyAndBuild(this WebApplicationBuilder builder, IProxyConfigProvider proxyConfigProvider)
     {
+        builder.WithName("Proxy");
         builder.Configuration.ConfigureConfiguration();
         builder.Services.ConfigureProxyServices(proxyConfigProvider);
 

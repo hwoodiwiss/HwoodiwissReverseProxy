@@ -1,15 +1,20 @@
-﻿using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc.Testing;
+﻿using HwoodiwissReverseProxy.Tests.Integration.Hosting;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace HwoodiwissReverseProxy.Tests.Integration;
 
-public class HwoodiwissReverseProxyFixture : WebApplicationFactory<Program>
+public class HwoodiwissReverseProxyManagementFixture : WeirdApplicationFactory<Program>
 {
     private readonly Dictionary<string, string?> _configuration = new();
     private IConfigurationRoot? _configurationRoot;
 
+    public HwoodiwissReverseProxyManagementFixture() : base(IsManagementHost)
+    {
+        
+    }
     
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -65,5 +70,15 @@ public class HwoodiwissReverseProxyFixture : WebApplicationFactory<Program>
             
             configurationRoot?.Reload();
         }
+    }
+    
+    private static bool IsManagementHost(IHostEnvironment? hostEnvironment)
+    {
+        if (hostEnvironment is null)
+        {
+            return false;
+        }
+
+        return hostEnvironment.ApplicationName.EndsWith(".Management", StringComparison.Ordinal);
     }
 }
