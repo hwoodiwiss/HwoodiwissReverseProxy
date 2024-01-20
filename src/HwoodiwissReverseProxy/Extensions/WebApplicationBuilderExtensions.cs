@@ -1,5 +1,6 @@
 ﻿using HwoodiwissReverseProxy.Infrastructure;
 using Microsoft.AspNetCore.Http.Json;
+using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.Logging.Console;
 using Microsoft.Extensions.Options;
 using OpenTelemetry.Logs;
@@ -95,7 +96,7 @@ public static class WebApplicationBuilderExtensions
         
         services.AddTelemetry(ManagementComponentName);
         services.AddSingleton<IProxyConfigProvider>(sp => new ConfigurationConfigProvider(sp.GetRequiredService<ILogger<ConfigurationConfigProvider>>(), configurationRoot.GetSection("ReverseProxy")));            
-        
+
         return services;
     }
     

@@ -11,7 +11,7 @@ var proxy = WebApplication
     .ConfigureProxyAndBuild(mgmt.Services.GetRequiredService<IProxyConfigProvider>());
 
 await Task.WhenAny([
-    mgmt.ConfigureRequestPipeline().RunAsync(),
+    mgmt.ConfigureRequestPipeline(mgmt.Configuration).RunAsync(),
     proxy.ConfigureReverseProxy().RunAsync(),
 ]);
 
