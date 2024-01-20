@@ -6,7 +6,7 @@ using Yarp.ReverseProxy.Configuration;
 
 namespace HwoodiwissReverseProxy.Infrastructure;
 
-internal sealed class ConfigurationSnapshot : IProxyConfig
+public sealed class ConfigurationSnapshot : IProxyConfig
 {
     public List<RouteConfig> Routes { get; internal set; } = new List<RouteConfig>();
 

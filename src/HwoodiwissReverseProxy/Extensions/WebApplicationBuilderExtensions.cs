@@ -74,7 +74,7 @@ public static class WebApplicationBuilderExtensions
         services.AddOptions();
         services.ConfigureJsonOptions(options =>
         {
-            options.SerializerOptions.TypeInfoResolverChain.Insert(0, ApplicationJsonContext.Default);
+            options.SerializerOptions.TypeInfoResolver = ApplicationJsonContext.Default;
         });
 
         if (!ApplicationMetadata.IsNativeAot)
