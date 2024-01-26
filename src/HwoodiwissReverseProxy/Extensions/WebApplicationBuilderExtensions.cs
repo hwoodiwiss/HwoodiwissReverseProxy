@@ -1,9 +1,10 @@
 ﻿using HwoodiwissReverseProxy.Infrastructure;
 using Microsoft.AspNetCore.Http.Json;
-using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.Logging.Console;
 using Microsoft.Extensions.Options;
 using OpenTelemetry.Logs;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Trace;
 using Yarp.ReverseProxy.Configuration;
 
 namespace HwoodiwissReverseProxy.Extensions;
@@ -94,7 +95,17 @@ public static class WebApplicationBuilderExtensions
             return loggerFactory.CreateLogger(key as string ?? (key.ToString() ?? "Unknown"));
         });
         
-        services.AddTelemetry(ManagementComponentName);
+        services.AddTelemetry(ManagementComponentName, metrics =>
+        {
+            metrics.AddAspNetCoreInstrumentation()
+                .AddMeter("Microsoft.AspNetCore.Hosting")
+                .AddMeter("Microsoft.AspNetCore.Server.Kestrel");
+        },
+        tracing =>
+        {
+            tracing.AddAspNetCoreInstrumentation()
+                .AddHttpClientInstrumentation();
+        });
         services.AddSingleton<IProxyConfigProvider>(sp => new ConfigurationConfigProvider(sp.GetRequiredService<ILogger<ConfigurationConfigProvider>>(), configurationRoot.GetSection("ReverseProxy")));            
 
         return services;
@@ -102,7 +113,14 @@ public static class WebApplicationBuilderExtensions
     
     public static IServiceCollection ConfigureProxyServices(this IServiceCollection services, IProxyConfigProvider proxyConfigProvider)
     {
-        services.AddTelemetry(ProxyComponentName);
+        services.AddTelemetry(ProxyComponentName, metrics =>
+            {
+                metrics.AddMeter("Yarp.ReverseProxy");
+            },
+            tracing =>
+            {
+                tracing.AddSource("Yarp.ReverseProxy");
+            });
         services.AddSingleton(proxyConfigProvider);
         services.AddReverseProxy();
         

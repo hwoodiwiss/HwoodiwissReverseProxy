@@ -6,24 +6,19 @@ namespace HwoodiwissReverseProxy.Extensions;
 
 public static class IServiceCollectionExtensions
 {
-    public static IServiceCollection AddTelemetry(this IServiceCollection services, string componentName)
+    public static IServiceCollection AddTelemetry(this IServiceCollection services, string componentName, Action<MeterProviderBuilder> configureMetrics, Action<TracerProviderBuilder> configureTraces)
     {
         services.AddOpenTelemetry()
             .ConfigureResource(builder => TelemetryResourceBuilder(builder, componentName))
             .WithMetrics(metrics =>
             {
-                metrics.AddAspNetCoreInstrumentation()
-                    .AddMeter("Microsoft.AspNetCore.Hosting")
-                    .AddMeter("Microsoft.AspNetCore.Server.Kestrel")
-                    .AddMeter("Yarp.ReverseProxy")
-                    .AddOtlpExporter();
+                configureMetrics(metrics);
+                metrics.AddOtlpExporter();
             })
             .WithTracing(tracing =>
             {
-                tracing.AddAspNetCoreInstrumentation()
-                    .AddSource("Yarp.ReverseProxy")
-                    .AddHttpClientInstrumentation()
-                    .AddOtlpExporter();
+                configureTraces(tracing);
+                tracing.AddOtlpExporter();
             });
 
         static void TelemetryResourceBuilder(ResourceBuilder resourceBuilder, string componentName)

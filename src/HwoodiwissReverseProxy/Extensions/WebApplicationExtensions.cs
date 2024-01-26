@@ -16,7 +16,7 @@ public static class WebApplicationExtensions
             app.UseOpenApi();
             app.UseSwaggerUi();
         }
-
+        
         app.MapEndpoints(app.Environment);
         
         return app;
