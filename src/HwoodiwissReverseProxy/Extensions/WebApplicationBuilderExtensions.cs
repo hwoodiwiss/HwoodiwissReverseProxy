@@ -94,18 +94,9 @@ public static class WebApplicationBuilderExtensions
             var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
             return loggerFactory.CreateLogger(key as string ?? (key.ToString() ?? "Unknown"));
         });
-        
-        services.AddTelemetry(ManagementComponentName, metrics =>
-        {
-            metrics.AddAspNetCoreInstrumentation()
-                .AddMeter("Microsoft.AspNetCore.Hosting")
-                .AddMeter("Microsoft.AspNetCore.Server.Kestrel");
-        },
-        tracing =>
-        {
-            tracing.AddAspNetCoreInstrumentation()
-                .AddHttpClientInstrumentation();
-        });
+
+        services.AddTelemetry();
+
         services.AddSingleton<IProxyConfigProvider>(sp => new ConfigurationConfigProvider(sp.GetRequiredService<ILogger<ConfigurationConfigProvider>>(), configurationRoot.GetSection("ReverseProxy")));            
 
         return services;
@@ -113,14 +104,6 @@ public static class WebApplicationBuilderExtensions
     
     public static IServiceCollection ConfigureProxyServices(this IServiceCollection services, IProxyConfigProvider proxyConfigProvider)
     {
-        services.AddTelemetry(ProxyComponentName, metrics =>
-            {
-                metrics.AddMeter("Yarp.ReverseProxy");
-            },
-            tracing =>
-            {
-                tracing.AddSource("Yarp.ReverseProxy");
-            });
         services.AddSingleton(proxyConfigProvider);
         services.AddReverseProxy();
         

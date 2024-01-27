@@ -6,22 +6,27 @@ namespace HwoodiwissReverseProxy.Extensions;
 
 public static class IServiceCollectionExtensions
 {
-    public static IServiceCollection AddTelemetry(this IServiceCollection services, string componentName, Action<MeterProviderBuilder> configureMetrics, Action<TracerProviderBuilder> configureTraces)
+    public static IServiceCollection AddTelemetry(this IServiceCollection services)
     {
         services.AddOpenTelemetry()
-            .ConfigureResource(builder => TelemetryResourceBuilder(builder, componentName))
+            .ConfigureResource(TelemetryResourceBuilder)
             .WithMetrics(metrics =>
             {
-                configureMetrics(metrics);
-                metrics.AddOtlpExporter();
+                metrics.AddAspNetCoreInstrumentation()
+                    .AddMeter("Microsoft.AspNetCore.Hosting")
+                    .AddMeter("Microsoft.AspNetCore.Server.Kestrel")
+                    .AddMeter("Yarp.ReverseProxy")
+                    .AddOtlpExporter();
             })
             .WithTracing(tracing =>
             {
-                configureTraces(tracing);
-                tracing.AddOtlpExporter();
+                tracing.AddAspNetCoreInstrumentation()
+                    .AddHttpClientInstrumentation()
+                    .AddSource("Yarp.ReverseProxy")
+                    .AddOtlpExporter();
             });
 
-        static void TelemetryResourceBuilder(ResourceBuilder resourceBuilder, string componentName)
+        static void TelemetryResourceBuilder(ResourceBuilder resourceBuilder)
         {
             resourceBuilder
                 .AddService(ApplicationMetadata.Name)
@@ -30,7 +35,6 @@ public static class IServiceCollectionExtensions
                     new ("service.branch", ApplicationMetadata.GitBranch),
                     new ("service.version", ApplicationMetadata.Version),
                     new ("service.host", Environment.MachineName),
-                    new ("service.component", componentName),
                 ]);
         }
         
