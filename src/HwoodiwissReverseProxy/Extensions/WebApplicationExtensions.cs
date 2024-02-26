@@ -1,4 +1,5 @@
-﻿using HwoodiwissReverseProxy.Endpoints;
+﻿using System.Runtime.CompilerServices;
+using HwoodiwissReverseProxy.Endpoints;
 using Microsoft.AspNetCore.StaticFiles;
 
 namespace HwoodiwissReverseProxy.Extensions;
@@ -8,24 +9,27 @@ public static class WebApplicationExtensions
     public static WebApplication ConfigureRequestPipeline(this WebApplication app, IConfiguration configuration)
     {
         app.UseDefaultFiles();
+
+
+        if (RuntimeFeature.IsDynamicCodeSupported)
+        {
+            app.UseOpenApi(cfg =>
+            {
+                cfg.Path = "/swagger/openapi.json";
+            });
+        }
+
+        app.MapEndpoints(app.Environment);
+
         app.UseStaticFiles(configuration);
 
-
-        if (!ApplicationMetadata.IsNativeAot)
-        {
-            app.UseOpenApi();
-            app.UseSwaggerUi();
-        }
-        
-        app.MapEndpoints(app.Environment);
-        
         return app;
     }
-    
+
     public static WebApplication ConfigureReverseProxy(this WebApplication app)
     {
         app.MapReverseProxy();
-        
+
         return app;
     }
 
@@ -44,7 +48,7 @@ public static class WebApplicationExtensions
             contentTypeProvider.Mappings.Add(mapping.Key, mapping.Value);
         }
 
-        var opts = new StaticFileOptions {ContentTypeProvider = contentTypeProvider};
+        var opts = new StaticFileOptions { ContentTypeProvider = contentTypeProvider };
         app.UseStaticFiles(opts);
 
         return app;

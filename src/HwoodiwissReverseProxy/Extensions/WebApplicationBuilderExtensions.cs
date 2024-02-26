@@ -1,4 +1,5 @@
-﻿using HwoodiwissReverseProxy.Infrastructure;
+﻿using System.Runtime.CompilerServices;
+using HwoodiwissReverseProxy.Infrastructure;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.Extensions.Logging.Console;
 using Microsoft.Extensions.Options;
@@ -27,7 +28,7 @@ public static class WebApplicationBuilderExtensions
         builder.Configuration.ConfigureConfiguration();
         var managementUrls = builder.Configuration.GetValue<string>("ManagementUrls");
         managementUrls = string.IsNullOrEmpty(managementUrls) ? "http://*:18265" : managementUrls;
-        
+
         builder.WebHost.UseUrls(managementUrls);
         builder.ConfigureLogging(builder.Configuration);
         builder.Services.AddOptions();
@@ -35,7 +36,7 @@ public static class WebApplicationBuilderExtensions
 
         return builder.Build();
     }
-    
+
     public static WebApplication ConfigureProxyAndBuild(this WebApplicationBuilder builder, IProxyConfigProvider proxyConfigProvider)
     {
         builder.WithName("Proxy");
@@ -55,22 +56,22 @@ public static class WebApplicationBuilderExtensions
             });
 
 #if DEBUG
-            loggingBuilder.AddConsole()
-                .AddDebug();
-            
-            builder.Services.Configure<ConsoleFormatterOptions>(options =>
-            {
-                options.IncludeScopes = true;
-            });
+        loggingBuilder.AddConsole()
+            .AddDebug();
+
+        builder.Services.Configure<ConsoleFormatterOptions>(options =>
+        {
+            options.IncludeScopes = true;
+        });
 #endif
-        
+
         return builder;
     }
-    
+
     private static IConfigurationBuilder ConfigureConfiguration(this IConfigurationBuilder configurationBuilder)
         => configurationBuilder
             .AddJsonFile("appsettings.Secrets.json", true, true);
-    
+
     public static IServiceCollection ConfigureServices(this IServiceCollection services, IConfigurationRoot configurationRoot)
     {
         services.AddOptions();
@@ -79,7 +80,7 @@ public static class WebApplicationBuilderExtensions
             options.SerializerOptions.TypeInfoResolver = ApplicationJsonContext.Default;
         });
 
-        if (!ApplicationMetadata.IsNativeAot)
+        if (RuntimeFeature.IsDynamicCodeSupported)
         {
             services.AddEndpointsApiExplorer();
             services.AddOpenApiDocument(cfg =>
@@ -97,19 +98,19 @@ public static class WebApplicationBuilderExtensions
 
         services.AddTelemetry();
 
-        services.AddSingleton<IProxyConfigProvider>(sp => new ConfigurationConfigProvider(sp.GetRequiredService<ILogger<ConfigurationConfigProvider>>(), configurationRoot.GetSection("ReverseProxy")));            
+        services.AddSingleton<IProxyConfigProvider>(sp => new ConfigurationConfigProvider(sp.GetRequiredService<ILogger<ConfigurationConfigProvider>>(), configurationRoot.GetSection("ReverseProxy")));
 
         return services;
     }
-    
+
     public static IServiceCollection ConfigureProxyServices(this IServiceCollection services, IProxyConfigProvider proxyConfigProvider)
     {
         services.AddSingleton(proxyConfigProvider);
         services.AddReverseProxy();
-        
+
         return services;
     }
-    
+
     private static IServiceCollection ConfigureJsonOptions(this IServiceCollection services, Action<JsonOptions> configureOptions)
     {
         services.ConfigureHttpJsonOptions(configureOptions);
@@ -119,7 +120,7 @@ public static class WebApplicationBuilderExtensions
             configureOptions(options);
             options.SerializerOptions.WriteIndented = true;
         });
-        
+
         services.AddKeyedTransient<JsonOptions>(KeyedService.AnyKey, (sp, key) =>
         {
             var optionsSnapshot = sp.GetRequiredService<IOptionsSnapshot<JsonOptions>>();
