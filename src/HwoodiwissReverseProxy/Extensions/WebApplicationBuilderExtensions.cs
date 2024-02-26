@@ -85,7 +85,7 @@ public static class WebApplicationBuilderExtensions
             services.AddEndpointsApiExplorer();
             services.AddOpenApiDocument(cfg =>
             {
-                cfg.DocumentName = "HwoodiwissReverseProxy Management API";
+                cfg.DocumentName = "v1";
             });
         }
 
