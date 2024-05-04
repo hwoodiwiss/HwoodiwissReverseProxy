@@ -5,7 +5,7 @@ root = true
 indent_style = space
 
 # Xml files
-[*.{xml,csproj,props,targets,config,vsixmanifest,resx,yml,html}]
+[*.{xml,csproj,props,targets,config,vsixmanifest,resx,yml}]
 indent_size = 2
 insert_final_newline = true
 
@@ -173,6 +173,10 @@ csharp_preserve_single_line_blocks = true
 csharp_preserve_single_line_statements = true
 
 #### Naming styles ####
+
+# IDE0160: Convert to file scoped namespace
+csharp_style_namespace_declarations = file_scoped:suggestion
+
 [*.{cs,vb}]
 
 # Naming rules

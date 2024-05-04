@@ -4,16 +4,16 @@ public static class ShouldContainAllAssertion
 {
     public static void ShouldContainAll(this string actual, string[] expected)
     {
-        foreach (var item in expected)
+        foreach (string item in expected)
         {
             actual.ShouldContain(item);
         }
     }
-    
+
     public static void ShouldContainAll<TItem>(this IEnumerable<TItem> actual, TItem[] expected)
     {
-        var actualList = actual.ToList();
-        foreach (var item in expected)
+        List<TItem> actualList = actual.ToList();
+        foreach (TItem? item in expected)
         {
             actualList.ShouldContain(item);
         }

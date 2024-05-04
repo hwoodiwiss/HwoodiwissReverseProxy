@@ -8,28 +8,28 @@ namespace HwoodiwissReverseProxy.Tests.Integration;
 
 public class HwoodiwissReverseProxyProxyFixture : WeirdApplicationFactory<Program>
 {
-    private readonly Dictionary<string, string?> _configuration = new();
+    private readonly Dictionary<string, string?> _configuration = [];
     private IConfigurationRoot? _configurationRoot;
 
     public HwoodiwissReverseProxyProxyFixture() : base(IsProxyHost)
     {
-        
+
     }
-    
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.ConfigureAppConfiguration(cfg =>
         {
             cfg.Add(new TestConfigurationSource(_configuration));
-            
+
             _configurationRoot = cfg as IConfigurationRoot;
         });
 
-        builder.ConfigureLogging(loggingBuilder => 
+        builder.ConfigureLogging(loggingBuilder =>
             loggingBuilder.AddConsole()
                 .AddDebug()
             );
-        
+
         base.ConfigureWebHost(builder);
     }
 
@@ -40,7 +40,7 @@ public class HwoodiwissReverseProxyProxyFixture : WeirdApplicationFactory<Progra
         _configurationRoot?.Reload();
         return new ConfigurationScope(key, originalValue, _configuration, _configurationRoot);
     }
-    
+
     private sealed class TestConfigurationSource(Dictionary<string, string?> configuration) : IConfigurationSource
     {
         public IConfigurationProvider Build(IConfigurationBuilder builder) =>
@@ -54,7 +54,7 @@ public class HwoodiwissReverseProxyProxyFixture : WeirdApplicationFactory<Progra
             }
         }
     }
-    
+
     private sealed class ConfigurationScope(string key, string? originalValue, Dictionary<string, string?> configuration, IConfigurationRoot? configurationRoot) : IDisposable
     {
         public void Dispose()
@@ -67,11 +67,11 @@ public class HwoodiwissReverseProxyProxyFixture : WeirdApplicationFactory<Progra
             {
                 configuration.Remove(key);
             }
-            
+
             configurationRoot?.Reload();
         }
     }
-    
+
     private static bool IsProxyHost(IHostEnvironment? hostEnvironment)
     {
         if (hostEnvironment is null)
