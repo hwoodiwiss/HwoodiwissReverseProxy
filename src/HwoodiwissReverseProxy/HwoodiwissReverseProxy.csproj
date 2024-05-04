@@ -17,9 +17,14 @@
   <PropertyGroup>
     <EnableRequestDelegateGenerator>true</EnableRequestDelegateGenerator>
     <EnableConfigurationBindingGenerator>true</EnableConfigurationBindingGenerator>
-    <IsAotCompatible>true</IsAotCompatible>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <PublishAot>true</PublishAot>
   </PropertyGroup>
-  
+  <PropertyGroup>
+    <ContainerRegistry>ghcr.io</ContainerRegistry>
+    <ContainerRepository>hwoodiwiss/hwoodiwiss-reverse-proxy</ContainerRepository>
+    <EnableSdkContainerSupport>true</EnableSdkContainerSupport>
+  </PropertyGroup>
   <PropertyGroup Condition=" '$(PublishAot)' == 'true' ">
     <DefineConstants>$(DefineConstants);NativeAot</DefineConstants>
   </PropertyGroup>
