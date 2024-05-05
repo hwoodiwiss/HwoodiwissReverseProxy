@@ -1,6 +1,7 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
     <RootNamespace>HwoodiwissReverseProxy</RootNamespace>
+    <UserSecretsId>dcea8d62-3fe1-484a-8f37-da3adc8fccea</UserSecretsId>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="ArgumentativeFilters" />

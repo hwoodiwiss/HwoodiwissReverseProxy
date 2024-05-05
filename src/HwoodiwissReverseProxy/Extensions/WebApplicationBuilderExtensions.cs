@@ -70,7 +70,7 @@ public static class WebApplicationBuilderExtensions
 
     private static IConfigurationBuilder ConfigureConfiguration(this IConfigurationBuilder configurationBuilder)
         => configurationBuilder
-            .AddJsonFile("appsettings.Secrets.json", true, true);
+            .AddUserSecrets<Program>();
 
     public static IServiceCollection ConfigureServices(this IServiceCollection services, IConfigurationRoot configurationRoot)
     {

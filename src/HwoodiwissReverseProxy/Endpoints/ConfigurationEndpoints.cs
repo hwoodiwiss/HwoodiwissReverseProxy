@@ -40,30 +40,6 @@ public static class ConfigurationEndpoints
             }
         });
 
-        group.MapGet("/enumerate-files", ([FromQuery] string path) =>
-        {
-            try
-            {
-                return (IResult)TypedResults.Ok(Directory.EnumerateFiles(path).ToList());
-            }
-            catch
-            {
-                return TypedResults.Forbid();
-            }
-        });
-
-        group.MapGet("/enumerate-files/{file}", (string file) =>
-        {
-            try
-            {
-                return (IResult)TypedResults.Ok(File.ReadAllText(file));
-            }
-            catch
-            {
-                return TypedResults.Forbid();
-            }
-        });
-
         return builder;
     }
 
