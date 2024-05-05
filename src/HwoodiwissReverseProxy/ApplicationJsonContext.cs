@@ -13,6 +13,7 @@ namespace HwoodiwissReverseProxy;
 [JsonSerializable(typeof(RouteConfig))]
 [JsonSerializable(typeof(ClusterConfig))]
 [JsonSerializable(typeof(ConfigurationSnapshot))]
+[JsonSerializable(typeof(List<string>))]
 [JsonSerializable(typeof(List<RouteConfig>))]
 [JsonSerializable(typeof(List<ClusterConfig>))]
 public partial class ApplicationJsonContext : JsonSerializerContext;
