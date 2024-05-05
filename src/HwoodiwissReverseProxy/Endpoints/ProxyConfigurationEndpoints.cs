@@ -10,12 +10,12 @@ public static class ProxyConfigurationEndpoints
     {
         var group = builder.MapGroup("/proxy")
             .WithPrettyPrint();
-        
-        group.MapGet("/", ([FromServices]IProxyConfigProvider configProvider) => configProvider.GetConfig());
-        
-        group.MapGet("/routes", ([FromServices]IProxyConfigProvider configProvider) => configProvider.GetConfig().Routes);
-        
-        group.MapGet("/clusters", ([FromServices]IProxyConfigProvider configProvider) => configProvider.GetConfig().Clusters);
+
+        group.MapGet("/", ([FromServices] IProxyConfigProvider configProvider) => configProvider.GetConfig());
+
+        group.MapGet("/routes", ([FromServices] IProxyConfigProvider configProvider) => configProvider.GetConfig().Routes);
+
+        group.MapGet("/clusters", ([FromServices] IProxyConfigProvider configProvider) => configProvider.GetConfig().Clusters);
 
         return builder;
     }

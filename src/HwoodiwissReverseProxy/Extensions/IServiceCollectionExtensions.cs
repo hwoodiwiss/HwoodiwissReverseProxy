@@ -37,7 +37,7 @@ public static class IServiceCollectionExtensions
                     new ("service.host", Environment.MachineName),
                 ]);
         }
-        
+
         return services;
     }
 }

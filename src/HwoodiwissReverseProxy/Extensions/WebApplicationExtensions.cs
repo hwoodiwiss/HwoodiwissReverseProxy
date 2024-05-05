@@ -42,7 +42,7 @@ public static class WebApplicationExtensions
     private static WebApplication UseStaticFiles(this WebApplication app, IConfiguration configuration)
     {
         var contentTypeProvider = new FileExtensionContentTypeProvider();
-        var mappings = configuration.GetSection("ContentTypeMappings").Get<Dictionary<string, string>>() ?? new Dictionary<string, string>();
+        var mappings = configuration.GetSection("ContentTypeMappings").Get<Dictionary<string, string>>() ?? [];
         foreach (var mapping in mappings)
         {
             contentTypeProvider.Mappings.Add(mapping.Key, mapping.Value);

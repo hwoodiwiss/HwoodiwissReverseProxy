@@ -11,7 +11,7 @@ public static class IEndpointBuilderExtensions
 
         return builder;
     }
-    
+
     /// <summary>
     /// Enables fluently defining that an endpoint should use buffered requests on the endpoint builder.
     /// </summary>
