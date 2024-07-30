@@ -1,4 +1,7 @@
 <Project>
+  <PropertyGroup>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+  </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="ArgumentativeFilters" Version="0.0.12" />
     <PackageVersion Include="coverlet.msbuild" Version="6.0.2" />
@@ -20,6 +23,7 @@
     <PackageVersion Include="OpenTelemetry.Resources.Host" Version="0.1.0-beta.2" />
     <PackageVersion Include="ReportGenerator" Version="5.3.8" />
     <PackageVersion Include="Shouldly" Version="4.2.1" />
+    <PackageVersion Include="System.Private.Uri" Version="4.3.2" />
     <PackageVersion Include="xunit" Version="2.9.0" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2" />
     <PackageVersion Include="Yarp.ReverseProxy" Version="2.1.0" />
