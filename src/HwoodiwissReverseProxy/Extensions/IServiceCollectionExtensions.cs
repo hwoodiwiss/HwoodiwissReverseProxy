@@ -12,7 +12,8 @@ public static class IServiceCollectionExtensions
             .ConfigureResource(TelemetryResourceBuilder)
             .WithMetrics(metrics =>
             {
-                metrics.AddAspNetCoreInstrumentation()
+                metrics.AddRuntimeInstrumentation()
+                    .AddAspNetCoreInstrumentation()
                     .AddMeter("Microsoft.AspNetCore.Hosting")
                     .AddMeter("Microsoft.AspNetCore.Server.Kestrel")
                     .AddMeter("Yarp.ReverseProxy")
@@ -31,11 +32,14 @@ public static class IServiceCollectionExtensions
             resourceBuilder
                 .AddService(ApplicationMetadata.Name)
                 .AddAttributes([
-                    new ("service.commit", ApplicationMetadata.GitCommit),
-                    new ("service.branch", ApplicationMetadata.GitBranch),
-                    new ("service.version", ApplicationMetadata.Version),
-                    new ("service.host", Environment.MachineName),
-                ]);
+                    new("service.commit", ApplicationMetadata.GitCommit),
+                    new("service.branch", ApplicationMetadata.GitBranch),
+                    new("service.version", ApplicationMetadata.Version),
+                    new("service.host", Environment.MachineName),
+                ])
+                .AddContainerDetector()
+                .AddHostDetector();
+
         }
 
         return services;
