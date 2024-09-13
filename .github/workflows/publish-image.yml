@@ -6,6 +6,10 @@ on:
       tag-version:
         description: "The tag version to use for the image"
         required: true
+      generate-binlog:
+        description: "Should we generate binlogs for the builds"
+        type: boolean
+        required: false
   push:
     tags:
       - "v*"
@@ -22,15 +26,15 @@ jobs:
     steps:
       - name: Get Tag Version
         id: get_tag
-        run: echo "tag-version=${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag-version || github.ref_name }}" >> $GITHUB_OUTPUT
+        run: echo "tag-version=${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag-version || github.ref_name }}" >> "$GITHUB_OUTPUT"
 
   build-image:
     needs: [get-tag-version]
     strategy:
       matrix:
-        architecture:
-          - arm64
-          - amd64
+        architecture: [arm64, amd64]
+        mode: [aot, jit]
+
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -41,12 +45,15 @@ jobs:
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4
 
+      - name: Install .NET Workloads
+        run: dotnet workload restore
+
       - name: Login to GHCR
         run: |
           echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u hwoodiwiss --password-stdin
 
       - name: Install ARM64 native dependencies
-        if: matrix.architecture == 'arm64'
+        if: matrix.architecture == 'arm64' && matrix.mode == 'aot'
         run: |
           sudo dpkg --add-architecture arm64
           sudo bash -c 'cat > /etc/apt/sources.list.d/arm64.list <<EOF
@@ -61,7 +68,16 @@ jobs:
 
       - name: Publish Image
         run: |
-          dotnet publish --os linux --arch ${{ matrix.architecture }} /t:PublishContainer -p ContainerImageTags='"${{ needs.get-tag-version.outputs.tag-version }}-${{ matrix.architecture }}${{ matrix.architecture == 'arm64' && ';latest' || '' }}"'
+          dotnet publish ./src/HwoodiwissReverseProxy/HwoodiwissReverseProxy.csproj ${{ inputs.generate-binlog && '-bl' || '' }} --os linux --arch ${{ matrix.architecture }} \
+          /t:PublishContainer ${{ matrix.mode == 'jit' && '/p:PublishAot=false' || '' }} \
+          -p ContainerImageTags='"${{ needs.get-tag-version.outputs.tag-version }}-${{ matrix.architecture }}${{ matrix.mode == 'jit' && '-jit' || '' }}${{ matrix.architecture == 'arm64' && ';latest' || '' }}${{ (matrix.architecture == 'arm64' && matrix.mode == 'jit') && '-jit' || '' }}"'
+
+      - name: Publish Binlog
+        if: inputs.generate-binlog == true
+        uses: actions/upload-artifact@v4
+        with:
+          name: binlog-${{ matrix.architecture }}-${{ matrix.mode }}
+          path: ./msbuild.binlog
 
   create-tag:
     permissions:
