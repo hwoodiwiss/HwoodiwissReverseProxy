@@ -23,6 +23,7 @@
     <EnableConfigurationBindingGenerator>true</EnableConfigurationBindingGenerator>
     <InvariantGlobalization>true</InvariantGlobalization>
     <PublishAot>true</PublishAot>
+    <UseSystemZlib>false</UseSystemZlib>
   </PropertyGroup>
   <PropertyGroup>
     <ContainerRegistry>ghcr.io</ContainerRegistry>
