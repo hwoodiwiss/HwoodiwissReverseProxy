@@ -58,8 +58,9 @@ jobs:
     needs: [get-tag-version]
     strategy:
       matrix:
-        architecture: [arm64, amd64]
+        architecture: [arm64]
         mode: [aot, jit]
+      fail-fast: false
 
     runs-on: ubuntu-latest
     steps:
