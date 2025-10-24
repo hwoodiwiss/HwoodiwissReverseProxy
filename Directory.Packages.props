@@ -3,7 +3,7 @@
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="ArgumentativeFilters" Version="0.0.12" />
+    <PackageVersion Include="ArgumentativeFilters" Version="0.0.13" />
     <PackageVersion Include="coverlet.msbuild" Version="6.0.4" />
     <PackageVersion Include="GitHubActionsTestLogger" Version="2.4.1" />
     <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="9.0.10" />
