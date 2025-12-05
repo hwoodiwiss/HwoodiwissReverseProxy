@@ -22,7 +22,7 @@ permissions:
 
 jobs:
   get-tag-version:
-    if: github.event_name != 'issue_comment' || (github.event.issue.pull_request != '' && startsWith(github.event.comment.body, '/publish'))
+    if: github.event_name != 'issue_comment' || (github.event.issue.pull_request != '' && startsWith(github.event.comment.body, '/publish') && github.triggering_actor == github.repository_owner)
     runs-on: ubuntu-latest
     outputs:
       tag-version: ${{ steps.get_version_details.outputs.tag-version }}
@@ -62,12 +62,13 @@ jobs:
         mode: [aot, jit]
       fail-fast: false
 
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.architecture == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
         with:
           submodules: recursive
+          ref: ${{ needs.get-tag-version.outputs.ref }}
 
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v5
@@ -75,23 +76,13 @@ jobs:
       - name: Install .NET Workloads
         run: dotnet workload restore
 
+      - name: Add GH Package Source
+        run: |
+          dotnet nuget add source --name GitHub --username hwoodiwiss --password ${{ secrets.GITHUB_TOKEN }} https://nuget.pkg.github.com/hwoodiwiss/index.json --store-password-in-clear-text
+
       - name: Login to GHCR
         run: |
           echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u hwoodiwiss --password-stdin
-
-      - name: Install ARM64 native dependencies
-        if: matrix.architecture == 'arm64' && matrix.mode == 'aot'
-        run: |
-          sudo dpkg --add-architecture arm64
-          sudo bash -c 'cat > /etc/apt/sources.list.d/arm64.list <<EOF
-          deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports/ jammy main restricted
-          deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports/ jammy-updates main restricted
-          deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports/ jammy-backports main restricted universe multiverse
-          EOF'
-          sudo sed -i -e 's/deb http/deb [arch=amd64] http/g' /etc/apt/sources.list
-          sudo sed -i -e 's/deb mirror/deb [arch=amd64] mirror/g' /etc/apt/sources.list
-          sudo apt update
-          sudo apt install --yes clang llvm binutils-aarch64-linux-gnu gcc-aarch64-linux-gnu zlib1g-dev:arm64
 
       - name: Publish Image
         run: |
