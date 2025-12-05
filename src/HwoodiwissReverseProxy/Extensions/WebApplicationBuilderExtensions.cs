@@ -1,11 +1,8 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.IO.Compression;
+using System.Reflection;
+using Hwoodiwiss.Extensions.Hosting;
 using HwoodiwissReverseProxy.Infrastructure;
-using Microsoft.AspNetCore.Http.Json;
-using Microsoft.Extensions.Logging.Console;
-using Microsoft.Extensions.Options;
-using OpenTelemetry.Logs;
-using OpenTelemetry.Metrics;
-using OpenTelemetry.Trace;
+using Microsoft.AspNetCore.StaticFiles;
 using Yarp.ReverseProxy.Configuration;
 
 namespace HwoodiwissReverseProxy.Extensions;
@@ -15,119 +12,44 @@ public static class WebApplicationBuilderExtensions
     public const string ProxyComponentName = "ReverseProxy";
     public const string ManagementComponentName = "Management";
 
-    public static WebApplicationBuilder WithName(this WebApplicationBuilder builder, string applicationName)
+    public static HwoodiwissApplicationBuilder ConfigureManagement(this HwoodiwissApplicationBuilder builder, out string managementUrls)
+    {
+        builder.WithName(ManagementComponentName);
+        var managementUrlConfiguration = builder.Configuration.GetValue<string>("ManagementUrls");
+        managementUrls = string.IsNullOrEmpty(managementUrlConfiguration) ? "http://*:18265" : managementUrlConfiguration;
+
+        builder.Services.Configure<StaticFileOptions>(options => ConfigureStaticFileContentTypeMappings(options));
+        builder.Services.AddSingleton<IProxyConfigProvider>(sp => new ConfigurationConfigProvider(sp.GetRequiredService<ILogger<ConfigurationConfigProvider>>(), builder.Configuration.GetSection("ReverseProxy")));
+
+        return builder;
+    }
+
+    public static HwoodiwissApplicationBuilder ConfigureProxy(this HwoodiwissApplicationBuilder builder, IProxyConfigProvider proxyConfigProvider)
+    {
+        builder.WithName(ProxyComponentName);
+        builder.Services.AddSingleton(proxyConfigProvider);
+        builder.Services.AddReverseProxy();
+
+        return builder;
+    }
+
+    private static HwoodiwissApplicationBuilder WithName(this HwoodiwissApplicationBuilder builder, string applicationName)
     {
         builder.Environment.ApplicationName = $"{builder.Environment.ApplicationName}.{applicationName}";
 
         return builder;
     }
 
-    public static WebApplication ConfigureAndBuild(this WebApplicationBuilder builder)
+    private static void ConfigureStaticFileContentTypeMappings(StaticFileOptions options)
     {
-        builder.WithName("Management");
-        builder.Configuration.ConfigureConfiguration();
-        var managementUrls = builder.Configuration.GetValue<string>("ManagementUrls");
-        managementUrls = string.IsNullOrEmpty(managementUrls) ? "http://*:18265" : managementUrls;
-
-        builder.WebHost.UseUrls(managementUrls);
-        builder.ConfigureLogging(builder.Configuration);
-        builder.Services.AddOptions();
-        builder.Services.ConfigureServices(builder.Configuration);
-
-        return builder.Build();
-    }
-
-    public static WebApplication ConfigureProxyAndBuild(this WebApplicationBuilder builder, IProxyConfigProvider proxyConfigProvider)
-    {
-        builder.WithName("Proxy");
-        builder.Configuration.ConfigureConfiguration();
-        builder.Services.ConfigureProxyServices(proxyConfigProvider);
-
-        return builder.Build();
-    }
-
-    private static WebApplicationBuilder ConfigureLogging(this WebApplicationBuilder builder, ConfigurationManager configuration)
-    {
-        var loggingBuilder = builder.Logging.AddConfiguration(configuration)
-            .AddOpenTelemetry(opt =>
-            {
-                opt.IncludeScopes = true;
-                opt.AddOtlpExporter();
-            });
-
-#if DEBUG
-        loggingBuilder.AddConsole()
-            .AddDebug();
-
-        builder.Services.Configure<ConsoleFormatterOptions>(options =>
+        var contentTypeProvider = new FileExtensionContentTypeProvider();
+        var buildContentTypeMappings = Assembly.GetExecutingAssembly().GetCustomAttributes<ContentTypeMappingAttribute>();
+        var mappings = buildContentTypeMappings.ToDictionary(attr => attr.Pattern, attr => attr.ContentType.TrimStart('*'));
+        foreach (var mapping in mappings)
         {
-            options.IncludeScopes = true;
-        });
-#endif
-
-        return builder;
-    }
-
-    private static IConfigurationBuilder ConfigureConfiguration(this IConfigurationBuilder configurationBuilder)
-        => configurationBuilder
-            .AddUserSecrets<Program>();
-
-    public static IServiceCollection ConfigureServices(this IServiceCollection services, IConfigurationRoot configurationRoot)
-    {
-        services.AddOptions();
-        services.ConfigureJsonOptions(options =>
-        {
-            options.SerializerOptions.TypeInfoResolver = ApplicationJsonContext.Default;
-        });
-
-        if (RuntimeFeature.IsDynamicCodeSupported)
-        {
-            services.AddEndpointsApiExplorer();
-            services.AddOpenApiDocument(cfg =>
-            {
-                cfg.DocumentName = "v1";
-            });
+            contentTypeProvider.Mappings.Add(mapping.Key, mapping.Value);
         }
 
-        // Enables easy named loggers in static contexts
-        services.AddKeyedTransient<ILogger>(KeyedService.AnyKey, (sp, key) =>
-        {
-            var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
-            return loggerFactory.CreateLogger(key as string ?? (key.ToString() ?? "Unknown"));
-        });
-
-        services.AddTelemetry();
-
-        services.AddSingleton<IProxyConfigProvider>(sp => new ConfigurationConfigProvider(sp.GetRequiredService<ILogger<ConfigurationConfigProvider>>(), configurationRoot.GetSection("ReverseProxy")));
-
-        return services;
-    }
-
-    public static IServiceCollection ConfigureProxyServices(this IServiceCollection services, IProxyConfigProvider proxyConfigProvider)
-    {
-        services.AddSingleton(proxyConfigProvider);
-        services.AddReverseProxy();
-
-        return services;
-    }
-
-    private static IServiceCollection ConfigureJsonOptions(this IServiceCollection services, Action<JsonOptions> configureOptions)
-    {
-        services.ConfigureHttpJsonOptions(configureOptions);
-
-        services.Configure<JsonOptions>(Constants.PrettyPrintJsonOptionsKey, options =>
-        {
-            configureOptions(options);
-            options.SerializerOptions.WriteIndented = true;
-        });
-
-        services.AddKeyedTransient<JsonOptions>(KeyedService.AnyKey, (sp, key) =>
-        {
-            var optionsSnapshot = sp.GetRequiredService<IOptionsSnapshot<JsonOptions>>();
-            var jsonOptions = optionsSnapshot.Get(key.ToString());
-            return jsonOptions;
-        });
-
-        return services;
+        options.ContentTypeProvider = contentTypeProvider;
     }
 }

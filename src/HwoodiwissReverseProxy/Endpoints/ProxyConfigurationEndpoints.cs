@@ -1,4 +1,4 @@
-﻿using HwoodiwissReverseProxy.Extensions;
+﻿using Hwoodiwiss.Extensions.Hosting.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Yarp.ReverseProxy.Configuration;
 
