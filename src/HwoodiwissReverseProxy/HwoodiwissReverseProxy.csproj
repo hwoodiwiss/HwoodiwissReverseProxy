@@ -3,33 +3,43 @@
     <RootNamespace>HwoodiwissReverseProxy</RootNamespace>
     <UserSecretsId>dcea8d62-3fe1-484a-8f37-da3adc8fccea</UserSecretsId>
   </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="ArgumentativeFilters" />
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
-    <PackageReference Include="NSwag.AspNetCore" />
-    <PackageReference Include="OpenTelemetry" />
-    <PackageReference Include="OpenTelemetry.Exporter.Console" />
-    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
-    <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
-    <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" />
-    <PackageReference Include="OpenTelemetry.Instrumentation.Http" />
-    <PackageReference Include="OpenTelemetry.Instrumentation.Runtime" />
-    <PackageReference Include="OpenTelemetry.Resources.Container" />
-    <PackageReference Include="OpenTelemetry.Resources.Host" />
+    <PackageReference Include="HwoodiwissApplication" />
     <PackageReference Include="Yarp.ReverseProxy" />
   </ItemGroup>
+
   <PropertyGroup>
     <EnableRequestDelegateGenerator>true</EnableRequestDelegateGenerator>
     <EnableConfigurationBindingGenerator>true</EnableConfigurationBindingGenerator>
     <InvariantGlobalization>true</InvariantGlobalization>
     <PublishAot>true</PublishAot>
   </PropertyGroup>
+
   <PropertyGroup>
     <ContainerRegistry>ghcr.io</ContainerRegistry>
     <ContainerRepository>hwoodiwiss/hwoodiwiss-reverse-proxy</ContainerRepository>
     <EnableSdkContainerSupport>true</EnableSdkContainerSupport>
   </PropertyGroup>
+
   <PropertyGroup Condition=" '$(PublishAot)' == 'true' ">
     <DefineConstants>$(DefineConstants);NativeAot</DefineConstants>
   </PropertyGroup>
+
+  <ItemGroup>
+    <StaticWebAssetContentTypeMapping Include="text/wgsl" Cache="max-age=31536000, immutable" Pattern="*.wgsl" Priority="0" />
+    <StaticWebAssetContentTypeMapping Include="text/plain" Cache="max-age=31536000, immutable" Pattern="*.obj" Priority="0" />
+    <StaticWebAssetContentTypeMapping Include="text/plain" Cache="max-age=31536000, immutable" Pattern="*.mtl" Priority="0" />
+  </ItemGroup>
+
+  <!-- This is used to make the modern MapStaticFiles approach cross-compatible with the legacy approach -->
+  <Target Name="AddContentTypeMappings" BeforeTargets="BeforeBuild">
+    <ItemGroup>
+      <AssemblyAttribute Include="HwoodiwissReverseProxy.ContentTypeMappingAttribute">
+        <_Parameter1>%(StaticWebAssetContentTypeMapping.Identity)</_Parameter1>
+        <_Parameter2>%(StaticWebAssetContentTypeMapping.Pattern)</_Parameter2>
+      </AssemblyAttribute>
+    </ItemGroup>
+  </Target>
 </Project>

@@ -36,6 +36,10 @@ jobs:
       - name: Install .NET Workloads
         run: dotnet workload restore
 
+      - name: Add GH Package Source
+        run: |
+          dotnet nuget add source --name GitHub --username github --password ${{ secrets.GITHUB_TOKEN }} https://nuget.pkg.github.com/hwoodiwiss/index.json --store-password-in-clear-text
+
       - name: Build & Test
         shell: pwsh
         run: .\build\build.ps1
@@ -44,7 +48,7 @@ jobs:
     strategy:
       matrix:
         architecture: [arm64, amd64]
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.architecture == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -55,19 +59,9 @@ jobs:
       - name: Install .NET Workloads
         run: dotnet workload restore
 
-      - name: Install ARM64 native dependencies
-        if: ${{ matrix.architecture == 'arm64' }}
+      - name: Add GH Package Source
         run: |
-          sudo dpkg --add-architecture arm64
-          sudo bash -c 'cat > /etc/apt/sources.list.d/arm64.list <<EOF
-          deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports/ jammy main restricted
-          deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports/ jammy-updates main restricted
-          deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports/ jammy-backports main restricted universe multiverse
-          EOF'
-          sudo sed -i -e 's/deb http/deb [arch=amd64] http/g' /etc/apt/sources.list
-          sudo sed -i -e 's/deb mirror/deb [arch=amd64] mirror/g' /etc/apt/sources.list
-          sudo apt update
-          sudo apt install --yes clang llvm binutils-aarch64-linux-gnu gcc-aarch64-linux-gnu zlib1g-dev:arm64
+          dotnet nuget add source --name GitHub --username github --password ${{ secrets.GITHUB_TOKEN }} https://nuget.pkg.github.com/hwoodiwiss/index.json --store-password-in-clear-text
 
       - name: Publish AOT
         shell: pwsh

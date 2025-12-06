@@ -79,6 +79,6 @@ public class HwoodiwissReverseProxyManagementFixture : WeirdApplicationFactory<P
             return false;
         }
 
-        return hostEnvironment.ApplicationName.EndsWith(".Management", StringComparison.Ordinal);
+        return !hostEnvironment.ApplicationName.EndsWith(".Proxy", StringComparison.Ordinal);
     }
 }
