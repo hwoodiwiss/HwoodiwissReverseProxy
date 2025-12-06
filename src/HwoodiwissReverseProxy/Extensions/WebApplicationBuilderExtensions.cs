@@ -14,11 +14,17 @@ public static class WebApplicationBuilderExtensions
 
     public static HwoodiwissApplicationBuilder ConfigureManagement(this HwoodiwissApplicationBuilder builder, out string managementUrls)
     {
-        builder.WithName(ManagementComponentName);
+        // This causes issues with MapStaticAssets at the moment
+        // builder.WithName(ManagementComponentName);
         var managementUrlConfiguration = builder.Configuration.GetValue<string>("ManagementUrls");
         managementUrls = string.IsNullOrEmpty(managementUrlConfiguration) ? "http://*:18265" : managementUrlConfiguration;
 
-        builder.Services.Configure<StaticFileOptions>(options => ConfigureStaticFileContentTypeMappings(options));
+        if (builder.Environment.IsDevelopment())
+        {
+            // In Development, add content type mappings for static files from ContentTypeMappingAttributes
+            builder.Services.Configure<StaticFileOptions>(ConfigureStaticFileContentTypeMappings);
+        }
+
         builder.Services.AddSingleton<IProxyConfigProvider>(sp => new ConfigurationConfigProvider(sp.GetRequiredService<ILogger<ConfigurationConfigProvider>>(), builder.Configuration.GetSection("ReverseProxy")));
 
         return builder;
