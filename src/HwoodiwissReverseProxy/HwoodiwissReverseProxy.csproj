@@ -28,9 +28,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <StaticWebAssetContentTypeMapping Include="text/wgsl" Cache="" Pattern="*.wgsl" Priority="0" />
-    <StaticWebAssetContentTypeMapping Include="text/plain" Cache="" Pattern="*.obj" Priority="0" />
-    <StaticWebAssetContentTypeMapping Include="text/plain" Cache="" Pattern="*.mtl" Priority="0" />
+    <StaticWebAssetContentTypeMapping Include="text/wgsl" Cache="max-age=31536000, immutable" Pattern="*.wgsl" Priority="0" />
+    <StaticWebAssetContentTypeMapping Include="text/plain" Cache="max-age=31536000, immutable" Pattern="*.obj" Priority="0" />
+    <StaticWebAssetContentTypeMapping Include="text/plain" Cache="max-age=31536000, immutable" Pattern="*.mtl" Priority="0" />
   </ItemGroup>
 
   <!-- This is used to make the modern MapStaticFiles approach cross-compatible with the legacy approach -->
