@@ -85,7 +85,10 @@ public class WeirdApplicationFactory<TEntryPoint> : IDisposable, IAsyncDisposabl
         get
         {
             EnsureServer();
+#pragma warning disable ASPDEPR008 // IWebHost is obsolete
+
             return _host?.Services ?? _server.Host.Services;
+#pragma warning restore ASPDEPR008 // IWebHost is obsolete
         }
     }
 
@@ -413,7 +416,9 @@ public class WeirdApplicationFactory<TEntryPoint> : IDisposable, IAsyncDisposabl
     /// <param name="builder">The <see cref="IWebHostBuilder"/> used to
     /// create the server.</param>
     /// <returns>The <see cref="TestServer"/> with the bootstrapped application.</returns>
+#pragma warning disable ASPDEPR008 // IWebHost is obsolete
     protected virtual TestServer CreateServer(IWebHostBuilder builder) => new(builder);
+#pragma warning restore ASPDEPR008
 
     /// <summary>
     /// Creates the <see cref="IHost"/> with the bootstrapped application in <paramref name="builder"/>.
