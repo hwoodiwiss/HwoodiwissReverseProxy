@@ -10,6 +10,10 @@
     <PackageReference Include="Yarp.ReverseProxy" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\HwoodiwissReverseProxy.UI\HwoodiwissReverseProxy.UI.csproj" />
+  </ItemGroup>
+
   <PropertyGroup>
     <EnableRequestDelegateGenerator>true</EnableRequestDelegateGenerator>
     <EnableConfigurationBindingGenerator>true</EnableConfigurationBindingGenerator>

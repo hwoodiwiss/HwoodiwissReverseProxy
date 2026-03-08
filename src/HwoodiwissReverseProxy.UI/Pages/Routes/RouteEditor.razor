@@ -1,0 +1,179 @@
+@page "/routes/new"
+@page "/routes/{RouteId}/edit"
+@inject ProxyApiClient Api
+@inject NavigationManager Nav
+
+<PageTitle>@(_isNew ? "Add Route" : "Edit Route")</PageTitle>
+
+<div class="d-flex align-items-center gap-2 mb-3">
+    <a href="routes" class="btn btn-outline-secondary btn-sm">&larr; Back</a>
+    <h1 class="mb-0">@(_isNew ? "Add Route" : "Edit Route")</h1>
+</div>
+
+@if (_error is not null)
+{
+    <div class="alert alert-danger">@_error</div>
+}
+
+@if (_loading)
+{
+    <div class="d-flex align-items-center gap-2 text-muted">
+        <div class="spinner-border spinner-border-sm" role="status"></div>
+        Loading...
+    </div>
+}
+else
+{
+    <EditForm Model="_model" OnValidSubmit="HandleSubmit">
+        <DataAnnotationsValidator />
+
+        <div class="card mb-3">
+            <div class="card-header"><strong>Basic Configuration</strong></div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label" for="routeId">Route ID</label>
+                    <InputText id="routeId" class="form-control" @bind-Value="_model.RouteId" disabled="@(!_isNew)" />
+                    <ValidationMessage For="() => _model.RouteId" class="validation-message" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="clusterId">Cluster</label>
+                    <InputSelect id="clusterId" class="form-select" @bind-Value="_model.ClusterId">
+                        <option value="">-- select a cluster --</option>
+                        @foreach (var cluster in _clusters)
+                        {
+                            <option value="@cluster.ClusterId">@cluster.ClusterId</option>
+                        }
+                    </InputSelect>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="order">Order</label>
+                    <InputNumber id="order" class="form-control" @bind-Value="_model.Order" />
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header"><strong>Match</strong></div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label" for="path">Path</label>
+                    <InputText id="path" class="form-control" @bind-Value="_model.Match.Path" placeholder="/api/{**catch-all}" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="hosts">Hosts <span class="text-muted fw-normal">(comma-separated)</span></label>
+                    <input id="hosts" type="text" class="form-control" value="@_hostsInput" @onchange="e => _hostsInput = e.Value?.ToString() ?? string.Empty" placeholder="example.com, api.example.com" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label d-block">HTTP Methods</label>
+                    <div class="d-flex flex-wrap gap-3">
+                        @foreach (var method in s_httpMethods)
+                        {
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="method-@method"
+                                       checked="@_selectedMethods.Contains(method)"
+                                       @onchange="e => ToggleMethod(method, (bool)(e.Value ?? false))" />
+                                <label class="form-check-label" for="method-@method">@method</label>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" disabled="@_saving">
+            @if (_saving)
+            {
+                <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+            }
+            @(_isNew ? "Create Route" : "Save Changes")
+        </button>
+    </EditForm>
+}
+
+@code {
+    [Parameter] public string? RouteId { get; set; }
+
+    private static readonly string[] s_httpMethods = ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"];
+
+    private bool _isNew;
+    private bool _loading = true;
+    private bool _saving;
+    private string? _error;
+    private RouteModel _model = new();
+    private string _hostsInput = string.Empty;
+    private HashSet<string> _selectedMethods = new(StringComparer.OrdinalIgnoreCase);
+    private List<ClusterModel> _clusters = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        _isNew = RouteId is null;
+        try
+        {
+            var clustersTask = Api.GetClustersAsync();
+            var routesTask = _isNew ? Task.FromResult<List<RouteModel>?>(null) : Api.GetRoutesAsync();
+
+            await Task.WhenAll(clustersTask, routesTask);
+
+            _clusters = await clustersTask ?? [];
+
+            if (!_isNew)
+            {
+                var existing = (await routesTask)?.FirstOrDefault(r => r.RouteId == RouteId);
+                if (existing is not null)
+                {
+                    _model = existing;
+                    _hostsInput = existing.Match.Hosts is { Count: > 0 }
+                        ? string.Join(", ", existing.Match.Hosts)
+                        : string.Empty;
+                    _selectedMethods = existing.Match.Methods is not null
+                        ? new HashSet<string>(existing.Match.Methods, StringComparer.OrdinalIgnoreCase)
+                        : new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                }
+                else
+                {
+                    _error = $"Route '{RouteId}' not found.";
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _error = $"Failed to load data: {ex.Message}";
+        }
+        _loading = false;
+    }
+
+    private void ToggleMethod(string method, bool enabled)
+    {
+        if (enabled) _selectedMethods.Add(method);
+        else _selectedMethods.Remove(method);
+    }
+
+    private async Task HandleSubmit()
+    {
+        _saving = true;
+        _error = null;
+        try
+        {
+            _model.Match.Hosts = string.IsNullOrWhiteSpace(_hostsInput)
+                ? null
+                : _hostsInput.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+
+            _model.Match.Methods = _selectedMethods.Count > 0
+                ? _selectedMethods.OrderBy(m => m).ToList()
+                : null;
+
+            var routeId = _isNew ? _model.RouteId : RouteId!;
+            var response = await Api.UpsertRouteAsync(routeId, _model);
+            response.EnsureSuccessStatusCode();
+            Nav.NavigateTo("routes");
+        }
+        catch (Exception ex)
+        {
+            _error = $"Failed to save route: {ex.Message}";
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+}

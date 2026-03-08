@@ -1,0 +1,179 @@
+@page "/clusters/new"
+@page "/clusters/{ClusterId}/edit"
+@inject ProxyApiClient Api
+@inject NavigationManager Nav
+
+<PageTitle>@(_isNew ? "Add Cluster" : "Edit Cluster")</PageTitle>
+
+<div class="d-flex align-items-center gap-2 mb-3">
+    <a href="clusters" class="btn btn-outline-secondary btn-sm">&larr; Back</a>
+    <h1 class="mb-0">@(_isNew ? "Add Cluster" : "Edit Cluster")</h1>
+</div>
+
+@if (_error is not null)
+{
+    <div class="alert alert-danger">@_error</div>
+}
+
+@if (_loading)
+{
+    <div class="d-flex align-items-center gap-2 text-muted">
+        <div class="spinner-border spinner-border-sm" role="status"></div>
+        Loading...
+    </div>
+}
+else
+{
+    <EditForm Model="_model" OnValidSubmit="HandleSubmit">
+        <DataAnnotationsValidator />
+
+        <div class="card mb-3">
+            <div class="card-header"><strong>Basic Configuration</strong></div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label" for="clusterId">Cluster ID</label>
+                    <InputText id="clusterId" class="form-control" @bind-Value="_model.ClusterId" disabled="@(!_isNew)" />
+                    <ValidationMessage For="() => _model.ClusterId" class="validation-message" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="lbPolicy">Load Balancing Policy</label>
+                    <InputSelect id="lbPolicy" class="form-select" @bind-Value="_model.LoadBalancingPolicy">
+                        <option value="">— Default —</option>
+                        <option value="RoundRobin">RoundRobin</option>
+                        <option value="LeastRequests">LeastRequests</option>
+                        <option value="Random">Random</option>
+                        <option value="PowerOfTwoChoices">PowerOfTwoChoices</option>
+                        <option value="FirstAlphabetical">FirstAlphabetical</option>
+                    </InputSelect>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <strong>Destinations</strong>
+                <button type="button" class="btn btn-outline-primary btn-sm" @onclick="AddDestination">Add Destination</button>
+            </div>
+            <div class="card-body">
+                @if (_destinations.Count == 0)
+                {
+                    <p class="text-muted mb-0">No destinations configured.</p>
+                }
+                else
+                {
+                    @for (var i = 0; i < _destinations.Count; i++)
+                    {
+                        var index = i;
+                        var dest = _destinations[index];
+                        <div class="border rounded p-3 mb-2">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <strong class="text-muted" style="font-size:0.8125rem;">Destination @(index + 1)</strong>
+                                <button type="button" class="btn btn-outline-danger btn-sm" @onclick="() => RemoveDestination(index)">Remove</button>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label" for="dest-key-@index">Key</label>
+                                <input id="dest-key-@index" type="text" class="form-control" value="@dest.Key"
+                                       @onchange="e => dest.Key = e.Value?.ToString() ?? string.Empty" placeholder="destination1" />
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label" for="dest-addr-@index">Address</label>
+                                <input id="dest-addr-@index" type="text" class="form-control" value="@dest.Address"
+                                       @onchange="e => dest.Address = e.Value?.ToString() ?? string.Empty" placeholder="https://backend.example.com" />
+                            </div>
+                            <div class="mb-0">
+                                <label class="form-label" for="dest-host-@index">Host Header Override</label>
+                                <input id="dest-host-@index" type="text" class="form-control" value="@dest.Host"
+                                       @onchange="e => dest.Host = string.IsNullOrWhiteSpace(e.Value?.ToString()) ? null : e.Value!.ToString()" placeholder="(optional)" />
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" disabled="@_saving">
+            @if (_saving)
+            {
+                <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+            }
+            @(_isNew ? "Create Cluster" : "Save Changes")
+        </button>
+    </EditForm>
+}
+
+@code {
+    [Parameter] public string? ClusterId { get; set; }
+
+    private sealed class DestinationEntry
+    {
+        public string Key { get; set; } = string.Empty;
+        public string Address { get; set; } = string.Empty;
+        public string? Host { get; set; }
+    }
+
+    private bool _isNew;
+    private bool _loading = true;
+    private bool _saving;
+    private string? _error;
+    private ClusterModel _model = new();
+    private List<DestinationEntry> _destinations = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _isNew = ClusterId is null;
+        if (!_isNew)
+        {
+            try
+            {
+                var clusters = await Api.GetClustersAsync();
+                var existing = clusters?.FirstOrDefault(c => c.ClusterId == ClusterId);
+                if (existing is not null)
+                {
+                    _model = existing;
+                    _destinations = existing.Destinations
+                        .Select(kv => new DestinationEntry { Key = kv.Key, Address = kv.Value.Address, Host = kv.Value.Host })
+                        .ToList();
+                }
+                else
+                {
+                    _error = $"Cluster '{ClusterId}' not found.";
+                }
+            }
+            catch (Exception ex)
+            {
+                _error = $"Failed to load cluster: {ex.Message}";
+            }
+        }
+        _loading = false;
+    }
+
+    private void AddDestination() => _destinations.Add(new DestinationEntry());
+    private void RemoveDestination(int index) => _destinations.RemoveAt(index);
+
+    private async Task HandleSubmit()
+    {
+        _saving = true;
+        _error = null;
+        try
+        {
+            _model.Destinations = _destinations
+                .Where(d => !string.IsNullOrWhiteSpace(d.Key))
+                .ToDictionary(
+                    d => d.Key,
+                    d => new DestinationModel { Address = d.Address, Host = d.Host });
+
+            var clusterId = _isNew ? _model.ClusterId : ClusterId!;
+            var response = await Api.UpsertClusterAsync(clusterId, _model);
+            response.EnsureSuccessStatusCode();
+            Nav.NavigateTo("clusters");
+        }
+        catch (Exception ex)
+        {
+            _error = $"Failed to save cluster: {ex.Message}";
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+}

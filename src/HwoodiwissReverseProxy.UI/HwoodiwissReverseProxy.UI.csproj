@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+  <PropertyGroup>
+    <RootNamespace>HwoodiwissReverseProxy.UI</RootNamespace>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <WasmEnableSIMD>true</WasmEnableSIMD>
+    <RunAOTCompilation>true</RunAOTCompilation>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" PrivateAssets="all" Condition=" '$(Configuration)' == 'Debug' " />
+  </ItemGroup>
+</Project>

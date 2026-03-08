@@ -15,6 +15,7 @@ var mgmt = HwoodiwissApplication
     .Build();
 
 mgmt.MapProxyConfigurationEndpoints();
+mgmt.MapFallbackToFile("index.html");
 
 var proxy = HwoodiwissApplication
     .CreateBuilder(args)

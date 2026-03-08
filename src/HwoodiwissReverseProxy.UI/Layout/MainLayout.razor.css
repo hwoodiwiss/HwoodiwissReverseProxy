@@ -1,0 +1,93 @@
+/* =========================================================
+   Page Shell
+   ========================================================= */
+.page {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background-color: var(--app-bg);
+}
+
+main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+/* =========================================================
+   Sidebar
+   ========================================================= */
+.sidebar {
+    background-color: var(--app-sidebar-bg);
+    border-right: 1px solid var(--app-sidebar-border);
+    flex-shrink: 0;
+}
+
+/* =========================================================
+   Top bar (mobile header strip — mostly empty on desktop)
+   ========================================================= */
+.top-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    height: 3.25rem;
+    padding-inline: 1.25rem;
+    border-bottom: 1px solid var(--app-border);
+    background-color: var(--app-surface);
+}
+
+.top-row ::deep a,
+.top-row ::deep .btn-link {
+    white-space: nowrap;
+    margin-left: 1.5rem;
+    text-decoration: none;
+    font-size: 0.875rem;
+    color: var(--app-text-muted);
+    transition: color var(--app-transition);
+}
+
+.top-row ::deep a:hover,
+.top-row ::deep .btn-link:hover {
+    color: var(--app-text);
+    text-decoration: none;
+}
+
+@media (max-width: 640.98px) {
+    .top-row {
+        justify-content: space-between;
+    }
+
+    .top-row ::deep a,
+    .top-row ::deep .btn-link {
+        margin-left: 0;
+    }
+}
+
+/* =========================================================
+   Desktop: side-by-side layout
+   ========================================================= */
+@media (min-width: 641px) {
+    .page {
+        flex-direction: row;
+    }
+
+    .sidebar {
+        width: var(--app-sidebar-width);
+        height: 100vh;
+        position: sticky;
+        top: 0;
+        overflow-y: auto;
+    }
+
+    .top-row {
+        display: none;
+    }
+
+    .top-row,
+    article {
+        padding-left: 2rem !important;
+        padding-right: 2rem !important;
+    }
+}

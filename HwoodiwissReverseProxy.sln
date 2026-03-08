@@ -46,6 +46,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{00CC538C
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HwoodiwissReverseProxy.Tests.Integration", "tests\HwoodiwissReverseProxy.Tests.Integration\HwoodiwissReverseProxy.Tests.Integration.csproj", "{EEC0909B-ABCE-47BE-8FA1-42B9549F19C0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HwoodiwissReverseProxy.UI", "src\HwoodiwissReverseProxy.UI\HwoodiwissReverseProxy.UI.csproj", "{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -57,6 +59,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{E1BED7B7-FAA2-4309-9B15-85BCB3989179} = {BEEB20F9-1BFD-45F5-A1F5-4BD321984B2F}
 		{5FACCCDC-4AB1-4A52-9987-3D49A52A68B4} = {772EE4D3-AA17-4883-B5F9-12E116648E0A}
+		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890} = {772EE4D3-AA17-4883-B5F9-12E116648E0A}
 		{EEC0909B-ABCE-47BE-8FA1-42B9549F19C0} = {BEEB20F9-1BFD-45F5-A1F5-4BD321984B2F}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
@@ -72,5 +75,9 @@ Global
 		{EEC0909B-ABCE-47BE-8FA1-42B9549F19C0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EEC0909B-ABCE-47BE-8FA1-42B9549F19C0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EEC0909B-ABCE-47BE-8FA1-42B9549F19C0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -1,0 +1,112 @@
+@page "/routes"
+@inject ProxyApiClient Api
+@inject NavigationManager Nav
+
+<PageTitle>Routes</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="mb-0">Routes</h1>
+    <a href="routes/new" class="btn btn-primary btn-sm">Add Route</a>
+</div>
+
+@if (_error is not null)
+{
+    <div class="alert alert-danger">@_error</div>
+}
+else if (_loading)
+{
+    <div class="d-flex align-items-center gap-2 text-muted">
+        <div class="spinner-border spinner-border-sm" role="status"></div>
+        Loading routes...
+    </div>
+}
+else if (_routes is not null)
+{
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Route ID</th>
+                        <th>Cluster ID</th>
+                        <th>Path</th>
+                        <th>Hosts</th>
+                        <th>Methods</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var route in _routes)
+                    {
+                        <tr>
+                            <td><code>@route.RouteId</code></td>
+                            <td>@(route.ClusterId ?? "—")</td>
+                            <td>@(route.Match.Path ?? "—")</td>
+                            <td>@(route.Match.Hosts is { Count: > 0 } ? string.Join(", ", route.Match.Hosts) : "—")</td>
+                            <td>@(route.Match.Methods is { Count: > 0 } ? string.Join(", ", route.Match.Methods) : "—")</td>
+                            <td class="text-end">
+                                <a href="routes/@Uri.EscapeDataString(route.RouteId)/edit" class="btn btn-outline-secondary btn-sm me-1">Edit</a>
+                                <button class="btn btn-outline-danger btn-sm" @onclick="() => ConfirmDelete(route.RouteId)">Delete</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@if (_deleteRouteId is not null)
+{
+    <ConfirmDeleteModal
+        Title="Delete Route"
+        Message=@($"Are you sure you want to delete route '{_deleteRouteId}'? This cannot be undone.")
+        OnConfirm="ExecuteDelete"
+        OnCancel="CancelDelete" />
+}
+
+@code {
+    private bool _loading = true;
+    private string? _error;
+    private List<RouteModel>? _routes;
+    private string? _deleteRouteId;
+
+    protected override async Task OnInitializedAsync() => await LoadRoutes();
+
+    private async Task LoadRoutes()
+    {
+        _loading = true;
+        _error = null;
+        try
+        {
+            _routes = await Api.GetRoutesAsync();
+        }
+        catch (Exception ex)
+        {
+            _error = $"Failed to load routes: {ex.Message}";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void ConfirmDelete(string routeId) => _deleteRouteId = routeId;
+    private void CancelDelete() => _deleteRouteId = null;
+
+    private async Task ExecuteDelete()
+    {
+        if (_deleteRouteId is null) return;
+        try
+        {
+            await Api.DeleteRouteAsync(_deleteRouteId);
+            _deleteRouteId = null;
+            await LoadRoutes();
+        }
+        catch (Exception ex)
+        {
+            _error = $"Failed to delete route: {ex.Message}";
+            _deleteRouteId = null;
+        }
+    }
+}
