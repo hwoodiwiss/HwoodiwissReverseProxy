@@ -25,7 +25,13 @@ public static class WebApplicationBuilderExtensions
             builder.Services.Configure<StaticFileOptions>(ConfigureStaticFileContentTypeMappings);
         }
 
-        builder.Services.AddSingleton<IProxyConfigProvider>(sp => new ConfigurationConfigProvider(sp.GetRequiredService<ILogger<ConfigurationConfigProvider>>(), builder.Configuration.GetSection("ReverseProxy")));
+        builder.Services.AddSingleton<InMemoryProxyConfigProvider>(sp =>
+        {
+            var seedProvider = new ConfigurationConfigProvider(sp.GetRequiredService<ILogger<ConfigurationConfigProvider>>(), builder.Configuration.GetSection("ReverseProxy"));
+            var seedConfig = seedProvider.GetConfig();
+            return new InMemoryProxyConfigProvider(seedConfig.Routes, seedConfig.Clusters);
+        });
+        builder.Services.AddSingleton<IProxyConfigProvider>(sp => sp.GetRequiredService<InMemoryProxyConfigProvider>());
 
         return builder;
     }

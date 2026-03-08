@@ -1,0 +1,108 @@
+@page "/clusters"
+@inject ProxyApiClient Api
+@inject NavigationManager Nav
+
+<PageTitle>Clusters</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="mb-0">Clusters</h1>
+    <a href="clusters/new" class="btn btn-primary btn-sm">Add Cluster</a>
+</div>
+
+@if (_error is not null)
+{
+    <div class="alert alert-danger">@_error</div>
+}
+else if (_loading)
+{
+    <div class="d-flex align-items-center gap-2 text-muted">
+        <div class="spinner-border spinner-border-sm" role="status"></div>
+        Loading clusters...
+    </div>
+}
+else if (_clusters is not null)
+{
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Cluster ID</th>
+                        <th>Destinations</th>
+                        <th>Load Balancing</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var cluster in _clusters)
+                    {
+                        <tr>
+                            <td><code>@cluster.ClusterId</code></td>
+                            <td>@cluster.Destinations.Count</td>
+                            <td>@(cluster.LoadBalancingPolicy ?? "—")</td>
+                            <td class="text-end">
+                                <a href="clusters/@Uri.EscapeDataString(cluster.ClusterId)/edit" class="btn btn-outline-secondary btn-sm me-1">Edit</a>
+                                <button class="btn btn-outline-danger btn-sm" @onclick="() => ConfirmDelete(cluster.ClusterId)">Delete</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@if (_deleteClusterId is not null)
+{
+    <ConfirmDeleteModal
+        Title="Delete Cluster"
+        Message=@($"Are you sure you want to delete cluster '{_deleteClusterId}'? This cannot be undone.")
+        OnConfirm="ExecuteDelete"
+        OnCancel="CancelDelete" />
+}
+
+@code {
+    private bool _loading = true;
+    private string? _error;
+    private List<ClusterModel>? _clusters;
+    private string? _deleteClusterId;
+
+    protected override async Task OnInitializedAsync() => await LoadClusters();
+
+    private async Task LoadClusters()
+    {
+        _loading = true;
+        _error = null;
+        try
+        {
+            _clusters = await Api.GetClustersAsync();
+        }
+        catch (Exception ex)
+        {
+            _error = $"Failed to load clusters: {ex.Message}";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void ConfirmDelete(string clusterId) => _deleteClusterId = clusterId;
+    private void CancelDelete() => _deleteClusterId = null;
+
+    private async Task ExecuteDelete()
+    {
+        if (_deleteClusterId is null) return;
+        try
+        {
+            await Api.DeleteClusterAsync(_deleteClusterId);
+            _deleteClusterId = null;
+            await LoadClusters();
+        }
+        catch (Exception ex)
+        {
+            _error = $"Failed to delete cluster: {ex.Message}";
+            _deleteClusterId = null;
+        }
+    }
+}
