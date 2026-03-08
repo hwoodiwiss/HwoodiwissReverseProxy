@@ -1,0 +1,35 @@
+<Solution>
+  <Folder Name="/.github/">
+    <File Path=".github/dependabot.yml" />
+  </Folder>
+  <Folder Name="/.workflows/">
+    <File Path=".github/workflows/build.yml" />
+    <File Path=".github/workflows/dependabot-autoapprove.yml" />
+  </Folder>
+  <Folder Name="/build/">
+    <File Path="build/build.ps1" />
+    <File Path="build/configure-env.ps1" />
+    <File Path="build/install-sdk.ps1" />
+    <File Path="build/publish-aot.ps1" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path=".github/dependabot.yml" />
+    <File Path=".gitignore" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Build.targets" />
+    <File Path="Directory.Packages.props" />
+    <File Path="global.json" />
+    <File Path="NuGet.config" />
+    <File Path="startrider.ps1" />
+    <File Path="startvscode.ps1" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/HwoodiwissReverseProxy.UI/HwoodiwissReverseProxy.UI.csproj" />
+    <Project Path="src/HwoodiwissReverseProxy/HwoodiwissReverseProxy.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/HwoodiwissReverseProxy.Tests.Integration/HwoodiwissReverseProxy.Tests.Integration.csproj" />
+    <Project Path="tests/HwoodiwissReverseProxy.Tests.Unit/HwoodiwissReverseProxy.Tests.Unit.csproj" />
+  </Folder>
+</Solution>

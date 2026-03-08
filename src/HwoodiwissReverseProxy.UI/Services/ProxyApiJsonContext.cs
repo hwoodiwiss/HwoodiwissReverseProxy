@@ -10,4 +10,5 @@ namespace HwoodiwissReverseProxy.UI.Services;
 [JsonSerializable(typeof(List<ClusterModel>))]
 [JsonSerializable(typeof(RouteMatchModel))]
 [JsonSerializable(typeof(DestinationModel))]
+[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
 public sealed partial class ProxyApiJsonContext : JsonSerializerContext;
